@@ -8,7 +8,7 @@ from .LikeSerializer import LikeSerializer
 from .DislikeSerializer import DislikeSerializer
 from rest_framework.response import Response
 from oauth2_provider.models import AccessToken
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from datetime import datetime
 from pytz import utc
 from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED, HTTP_400_BAD_REQUEST
@@ -58,16 +58,37 @@ class PostViewSet(ModelViewSet):
             return Response(data="Operation not allowed")
         return Response(data="Something went wrong")
 
-    #Change this method instead of getting the
-    def retrieve(self, request,pk, *args, **kwargs):
+    # Change this method instead of getting the
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
         username = AccessToken.objects.get(token=request.GET['access_token'])
         post = Post.objects.get(pk=pk)
         serializer = PostSerializer(post)
-        return Response(len(serializer.data['liked_by']))
+        # return Response(len(serializer.data['liked_by']))
+        # posts = Post.objects.all()
+        if post.expiration_time < utc.localize(datetime.now()):
+            post.is_live = False
+            post.save()
+        serializer = PostSerializer(post)
+        return Response(serializer.data)
 
 
+class CommentViewSet(ViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Comment.objects.all()
 
+    def list(self, request):
+        comments = self.queryset
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
 
-
-
-
+    def create(self, request):
+        comment_data = request.data
+        post = Post.objects.get(pk=comment_data['post'])
+        username = AccessToken.objects.get(token=request.GET['access_token'])
+        print(username)
+        comment = Comment.objects.create(comment=comment_data['comment'], post=post, commented_by=username.user)
+        comment.save()
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data)
