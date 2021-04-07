@@ -5,13 +5,14 @@ from .models import *
 from .PostSerializer import PostSerializer
 from .CommentSerializer import CommentSerializer
 from .LikeSerializer import LikeSerializer
-from .DislikeSerializer import DislikeSerializer
+# from .DislikeSerializer import DislikeSerializer
 from rest_framework.response import Response
 from oauth2_provider.models import AccessToken
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from datetime import datetime
 from pytz import utc
 from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED, HTTP_400_BAD_REQUEST
+from .helper import LikeUtils,updatePostStatus
 
 
 # {"username":"hamza","password":"hamza"}
@@ -20,6 +21,12 @@ class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
     queryset = Post.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        updatePostStatus()
+        q = Post.objects.all()
+        serializer = PostSerializer(q,many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         post_data = request.data
@@ -88,7 +95,54 @@ class CommentViewSet(ViewSet):
         post = Post.objects.get(pk=comment_data['post'])
         username = AccessToken.objects.get(token=request.GET['access_token'])
         print(username)
-        comment = Comment.objects.create(comment=comment_data['comment'], post=post, commented_by=username.user)
-        comment.save()
-        serializer = CommentSerializer(comment)
-        return Response(serializer.data)
+        if post.is_live:
+            comment = Comment.objects.create(comment=comment_data['comment'], post=post, commented_by=username.user)
+            comment.save()
+            serializer = CommentSerializer(comment)
+            return Response(serializer.data)
+        return Response("Post is expired now ")
+
+
+class LikeViewSet(ViewSet):
+    serializer_class = LikeSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Like.objects.all()
+
+    def create(self, request):
+        like_data = request.data
+        post_id = Post.objects.get(pk=like_data['post_id'])
+        username = AccessToken.objects.get(token=request.GET['access_token'])
+        if Like.objects.filter(post_id=post_id,liked_by=username.user):
+            return Response("You have already like the post")
+        if post_id.is_live:
+            like_object = Like.objects.create(post_id=post_id, liked_by=username.user)
+            like_object.save()
+            serializer = LikeSerializer(like_object)
+            return Response(serializer.data)
+        return Response("Post is expired now.")
+
+
+
+# class DislikeViewSet(ViewSet):
+#     serializer_class = LikeSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = Like.objects.filter(is_liked=False)
+#
+#     def create(self, request):
+#         dislike_data = request.data
+#         post_id = Post.objects.get(pk=dislike_data['post_id'])
+#         username = AccessToken.objects.get(token=request.GET['access_token'])
+#         already_liked = Like.objects.get(post_id=post_id, liked_by=username.user)
+#         if already_liked:
+#             print(already_liked.liked_by, already_liked.is_liked)
+#             if already_liked.is_liked or already_liked.is_liked is None:
+#                 already_liked.is_liked = False
+#                 already_liked.save()
+#                 serializer = LikeSerializer(already_liked)
+#                 return Response(serializer.data)
+#         else:
+#             dislike_object = Like.objects.create(post_id=post_id, liked_by=username.user, is_liked=False)
+#             dislike_object.save()
+#             serializer = LikeSerializer(dislike_object)
+#             return Response(serializer.data)
+#         return Response(data="Seems like you have already disliked.....")

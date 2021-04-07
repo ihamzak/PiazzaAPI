@@ -17,7 +17,7 @@ IP_revoke_token = 'http://127.0.0.1:8000/o/revoke_token/'
 # {"username":"hamza","password":"hamza"}
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def register(request):
     '''
     Registers user to the server. Input should be in the format:
@@ -45,7 +45,7 @@ def register(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def token(request):
     '''
     Gets tokens with username and password. Input should be in the format:

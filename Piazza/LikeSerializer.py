@@ -1,9 +1,10 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from .models import Like
 
 
 class LikeSerializer(ModelSerializer):
+
     class Meta:
         model = Like
-        fields = '__all__'
+        fields = ['liked_by']
 

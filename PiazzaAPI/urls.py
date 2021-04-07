@@ -16,12 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from Piazza.views import PostViewSet,CommentViewSet
+from Piazza.views import PostViewSet, CommentViewSet, LikeViewSet   #,DislikeViewSet
 
 router = DefaultRouter()
 router.register(r'posts', PostViewSet)
-router.register(r'comments',CommentViewSet)
-
+router.register(r'comments', CommentViewSet)
+router.register(r'like', LikeViewSet)
+#router.register(r'dislike',DislikeViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('o/', include('oauth2_provider.urls', namespace="oauth2_provider")),

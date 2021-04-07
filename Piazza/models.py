@@ -7,7 +7,7 @@ import time
 
 
 class Topic(models.Model):
-    topic_name = models.CharField(max_length=100,unique=True)
+    topic_name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.topic_name
@@ -15,15 +15,15 @@ class Topic(models.Model):
 
 class Post(models.Model):
     title = models.CharField(max_length=350)
-    topic = models.ForeignKey(Topic, on_delete=models.CASCADE,to_field="topic_name")
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, to_field="topic_name")
     created_at = models.DateTimeField(auto_now_add=True)
     message = models.TextField()
     expiration_time = models.DateTimeField()
     post_owner = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE)
-    is_live = models.BooleanField(default=True,editable=False)
+    is_live = models.BooleanField(default=True, editable=False)
 
     def save(self, *args, **kwargs):
-        if self.expiration_time >= pytz.utc.localize(datetime.datetime.now()):
+        if self.expiration_time >= timezone.localtime(): #pytz.utc.localize(datetime.datetime.now()):
             self.is_live = True
         else:
             self.is_live = False
@@ -44,16 +44,13 @@ class Comment(models.Model):
 
 
 class Like(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes")
+    post_id = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
     liked_by = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE)
 
     def __str__(self):
-        return str(self.post.title) + " liked by " + str(self.liked_by)
+        return "Post: " + str(self.post_id) + ", Liked by:" + str(self.liked_by)
+
+    class Meta:
+        unique_together = ('post_id', 'liked_by')
 
 
-class Dislike(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="dislikes")
-    disliked_by = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return str(self.post.title) + " disliked by " + str(self.disliked_by)
