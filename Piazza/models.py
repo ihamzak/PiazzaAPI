@@ -23,12 +23,14 @@ class Post(models.Model):
     is_live = models.BooleanField(default=True, editable=False)
     total_likes = models.IntegerField(default=0, editable=True)
     total_dislikes = models.IntegerField(default=0, editable=True)
+    total_time_remaining = models.DurationField()
 
     def save(self, *args, **kwargs):
         if self.expiration_time >= timezone.localtime():  # pytz.utc.localize(datetime.datetime.now()):
             self.is_live = True
         else:
             self.is_live = False
+        self.total_time_remaining = self.expiration_time - timezone.localtime()
         super(Post, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -51,7 +53,6 @@ class Like(models.Model):
 
     def __str__(self):
         return "Post: " + str(self.liked_post_id) + ", Liked by:" + str(self.liked_by)
-
 
     class Meta:
         unique_together = ('liked_post_id', 'liked_by')
