@@ -110,7 +110,7 @@ class ExpiredPostsViewSet(ViewSet):
     queryset = Post.objects.all()
 
     def list(self,request):
-        expired_posts_queryset = Post.objects.filter(is_live=True)
+        expired_posts_queryset = Post.objects.filter(is_live=False)
         serializer = PostSerializer(expired_posts_queryset,many=True)
         return Response(serializer.data)
 
