@@ -21,9 +21,11 @@ class Post(models.Model):
     expiration_time = models.DateTimeField()
     post_owner = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE)
     is_live = models.BooleanField(default=True, editable=False)
+    total_likes = models.IntegerField(default=0, editable=True)
+    total_dislikes = models.IntegerField(default=0, editable=True)
 
     def save(self, *args, **kwargs):
-        if self.expiration_time >= timezone.localtime(): #pytz.utc.localize(datetime.datetime.now()):
+        if self.expiration_time >= timezone.localtime():  # pytz.utc.localize(datetime.datetime.now()):
             self.is_live = True
         else:
             self.is_live = False
@@ -44,13 +46,23 @@ class Comment(models.Model):
 
 
 class Like(models.Model):
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
+    liked_post_id = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='like')
     liked_by = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE)
 
     def __str__(self):
-        return "Post: " + str(self.post_id) + ", Liked by:" + str(self.liked_by)
+        return "Post: " + str(self.liked_post_id) + ", Liked by:" + str(self.liked_by)
+
 
     class Meta:
-        unique_together = ('post_id', 'liked_by')
+        unique_together = ('liked_post_id', 'liked_by')
 
 
+class Dislike(models.Model):
+    disliked_post_id = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='dislike')
+    disliked_by = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "Post: " + str(self.disliked_post_id) + ", disiked by:" + str(self.disliked_by)
+
+    class Meta:
+        unique_together = ('disliked_post_id', 'disliked_by')

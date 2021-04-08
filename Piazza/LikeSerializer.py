@@ -6,5 +6,7 @@ class LikeSerializer(ModelSerializer):
 
     class Meta:
         model = Like
-        fields = ['liked_by']
+        fields = '__all__'
+
+
 
