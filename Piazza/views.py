@@ -16,6 +16,7 @@ from .helper import updatePostStatus
 from .DislikeSerializer import DislikeSerializer
 from django.db.models import Prefetch
 
+
 # {"username":"hamza","password":"hamza"}
 
 class PostViewSet(ModelViewSet):
@@ -86,10 +87,10 @@ class TopicViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Post.objects.all()
 
-    def list(self,request):
+    def list(self, request):
         topic_data = request.data
         topic_queryset = Post.objects.filter(topic=topic_data['topic'])
-        serializer = PostSerializer(topic_queryset,many=True)
+        serializer = PostSerializer(topic_queryset, many=True)
         return Response(serializer.data)
 
 
@@ -98,9 +99,9 @@ class LivePostsViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Post.objects.all()
 
-    def list(self,request):
+    def list(self, request):
         live_posts_queryset = Post.objects.filter(is_live=True)
-        serializer = PostSerializer(live_posts_queryset,many=True)
+        serializer = PostSerializer(live_posts_queryset, many=True)
         return Response(serializer.data)
 
 
@@ -109,11 +110,10 @@ class ExpiredPostsViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Post.objects.all()
 
-    def list(self,request):
+    def list(self, request):
         expired_posts_queryset = Post.objects.filter(is_live=False)
-        serializer = PostSerializer(expired_posts_queryset,many=True)
+        serializer = PostSerializer(expired_posts_queryset, many=True)
         return Response(serializer.data)
-
 
 
 class CommentViewSet(ViewSet):
@@ -185,9 +185,6 @@ class DislikeViewSet(ViewSet):
                 serializer = DislikeSerializer(dislike_object)
                 return Response(serializer.data)
         return Response("Post is expired now.")
-
-
-
 
 # class DislikeViewSet(ViewSet):
 #     serializer_class = LikeSerializer
