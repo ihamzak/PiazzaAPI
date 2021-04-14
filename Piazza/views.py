@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from oauth2_provider.models import AccessToken
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from datetime import datetime
-from pytz import utc
+from pytz import utc,timezone
 from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED, HTTP_400_BAD_REQUEST
 from .helper import updatePostStatus
 from .DislikeSerializer import DislikeSerializer
@@ -26,7 +26,11 @@ class PostViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         updatePostStatus()
-        q = Post.objects.all()
+        print(request.data)
+        if 'postid' in request.data:
+            q = Post.objects.filter(pk=request.data['postid'])
+        else:
+            q = Post.objects.all()
         serializer = PostSerializer(q, many=True)
         return Response(serializer.data)
 
@@ -34,7 +38,7 @@ class PostViewSet(ModelViewSet):
         post_data = request.data
         username = AccessToken.objects.get(token=request.GET['access_token'])
         new_post = Post.objects.create(title=post_data['title'], message=post_data['message'],
-                                       expiration_time=utc.localize(
+                                       expiration_time=timezone("Europe/London").localize(
                                            datetime.strptime(post_data['expiration_time'], '%m/%d/%y %H:%M:%S')),
                                        topic=Topic.objects.get(topic_name=post_data['topic']),
                                        post_owner=username.user)
@@ -69,17 +73,19 @@ class PostViewSet(ModelViewSet):
 
     # Change this method instead of getting the
 
-    def retrieve(self, request, pk=None, *args, **kwargs):
-        username = AccessToken.objects.get(token=request.GET['access_token'])
-        post = Post.objects.get(pk=pk)
-        serializer = PostSerializer(post)
-        # return Response(len(serializer.data['liked_by']))
-        # posts = Post.objects.all()
-        if post.expiration_time < utc.localize(datetime.now()):
-            post.is_live = False
-            post.save()
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
+    # def retrieve(self, request, *args, **kwargs):
+    #     print(request.data)
+    #     username = AccessToken.objects.get(token=request.GET['access_token'])
+    #     print(username)
+    #     post = Post.objects.get(request.data['post_id'])
+    #     serializer = PostSerializer(post)
+    #     # return Response(len(serializer.data['liked_by']))
+    #     # posts = Post.objects.all()
+    #     if post.expiration_time < utc.localize(datetime.now()):
+    #         post.is_live = False
+    #         post.save()
+    #     serializer = PostSerializer(post)
+    #     return Response(serializer.data)
 
 
 class TopicViewSet(ViewSet):
@@ -128,8 +134,9 @@ class CommentViewSet(ViewSet):
 
     def create(self, request):
         comment_data = request.data
+        print(comment_data)
         post = Post.objects.get(pk=comment_data['post'])
-        username = AccessToken.objects.get(token=request.GET['access_token'])
+        username = AccessToken.objects.get(token=request.data['access_token'])
         print(username)
         if post.is_live:
             comment = Comment.objects.create(comment=comment_data['comment'], post=post, commented_by=username.user)
@@ -179,7 +186,7 @@ class DislikeViewSet(ViewSet):
             return Response("You have already disliked the post")
         if disliked_post_id.is_live:
             if Like.objects.filter(liked_post_id=disliked_post_id, liked_by=username.user).exists():
-                return Response("You have liked the post you can't like it anymore")
+                return Response("You have liked the post you can't dislike it now")
             else:
                 dislike_object = Dislike.objects.create(disliked_post_id=disliked_post_id, disliked_by=username.user)
                 dislike_object.save()
