@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from oauth2_provider.models import AccessToken
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from datetime import datetime
-from pytz import utc,timezone
+from pytz import utc, timezone
 from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED, HTTP_400_BAD_REQUEST
 from .helper import updatePostStatus
 from .DislikeSerializer import DislikeSerializer
@@ -36,7 +36,7 @@ class PostViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         post_data = request.data
-        username = AccessToken.objects.get(token=request.GET['access_token'])
+        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         new_post = Post.objects.create(title=post_data['title'], message=post_data['message'],
                                        expiration_time=timezone("Europe/London").localize(
                                            datetime.strptime(post_data['expiration_time'], '%m/%d/%y %H:%M:%S')),
@@ -48,7 +48,7 @@ class PostViewSet(ModelViewSet):
 
     def update(self, request, pk, *args, **kwargs):
         post_data = request.data
-        username = AccessToken.objects.get(token=request.GET['access_token'])
+        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         post = Post.objects.get(pk=pk)
         if username.user == post.post_owner:
             post.title = post_data['title']
@@ -61,7 +61,7 @@ class PostViewSet(ModelViewSet):
 
     def destroy(self, request, pk, *args, **kwargs):
         # print(pk)
-        username = AccessToken.objects.get(token=request.GET['access_token'])
+        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         post = Post.objects.get(pk=pk)
         # print(username.user, " == ", post.post_owner)
         if username.user == post.post_owner:
@@ -136,7 +136,7 @@ class CommentViewSet(ViewSet):
         comment_data = request.data
         print(comment_data)
         post = Post.objects.get(pk=comment_data['post'])
-        username = AccessToken.objects.get(token=request.data['access_token'])
+        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         print(username)
         if post.is_live:
             comment = Comment.objects.create(comment=comment_data['comment'], post=post, commented_by=username.user)
@@ -154,7 +154,7 @@ class LikeViewSet(ViewSet):
     def create(self, request):
         like_data = request.data
         liked_post_id = Post.objects.get(pk=like_data['liked_post_id'])
-        username = AccessToken.objects.get(token=request.GET['access_token'])
+        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         if Like.objects.filter(liked_post_id=liked_post_id, liked_by=username.user):
             return Response("You have already like the post")
         if liked_post_id.is_live:
@@ -170,18 +170,19 @@ class LikeViewSet(ViewSet):
         return Response("Post is expired now.")
 
 
-
-
-
 class DislikeViewSet(ViewSet):
     serializer_class = DislikeSerializer
     permission_classes = [IsAuthenticated]
     queryset = Dislike.objects.all()
 
     def create(self, request):
+        # TODO  (get the token from string and pass it required variables and also fix this for all the other methods )
+        print(request.META['HTTP_AUTHORIZATION'])
+        access_token = request.META['HTTP_AUTHORIZATION'].replace('Bearer', "").strip()
+        print(access_token)
         dislike_data = request.data
         disliked_post_id = Post.objects.get(pk=dislike_data['disliked_post_id'])
-        username = AccessToken.objects.get(token=request.GET['access_token'])
+        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         if Dislike.objects.filter(disliked_post_id=disliked_post_id, disliked_by=username.user).exists():
             return Response("You have already disliked the post")
         if disliked_post_id.is_live:
