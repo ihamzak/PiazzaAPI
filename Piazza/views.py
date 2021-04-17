@@ -73,19 +73,19 @@ class PostViewSet(ModelViewSet):
 
     # Change this method instead of getting the
 
-    # def retrieve(self, request, *args, **kwargs):
-    #     print(request.data)
-    #     username = AccessToken.objects.get(token=request.GET['access_token'])
-    #     print(username)
-    #     post = Post.objects.get(request.data['post_id'])
-    #     serializer = PostSerializer(post)
-    #     # return Response(len(serializer.data['liked_by']))
-    #     # posts = Post.objects.all()
-    #     if post.expiration_time < utc.localize(datetime.now()):
-    #         post.is_live = False
-    #         post.save()
-    #     serializer = PostSerializer(post)
-    #     return Response(serializer.data)
+    def retrieve(self, request,pk, *args, **kwargs):
+        print(request.data)
+        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
+        print(username)
+        post = Post.objects.get(pk=pk)
+        serializer = PostSerializer(post)
+        # return Response(len(serializer.data['liked_by']))
+        # posts = Post.objects.all()
+        if post.expiration_time < utc.localize(datetime.now()):
+            post.is_live = False
+            post.save()
+        serializer = PostSerializer(post)
+        return Response(serializer.data)
 
 
 class TopicViewSet(ViewSet):
