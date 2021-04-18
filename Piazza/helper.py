@@ -12,5 +12,6 @@ def updatePostStatus():
         post.total_time_remaining = post.expiration_time - localtime()
         post.save()
         if post.expiration_time < localtime():
+            post.total_time_remaining = datetime.timedelta(days=0,seconds=0,hours=0,minutes=0)
             post.is_live = False
             post.save()
