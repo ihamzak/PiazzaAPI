@@ -14,10 +14,10 @@ from pytz import utc, timezone
 from rest_framework.status import HTTP_405_METHOD_NOT_ALLOWED, HTTP_400_BAD_REQUEST
 from .helper import updatePostStatus
 from .DislikeSerializer import DislikeSerializer
-from django.db.models import Prefetch
 
 
 # {"username":"hamza","password":"hamza"}
+
 
 class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
@@ -50,13 +50,15 @@ class PostViewSet(ModelViewSet):
         post_data = request.data
         username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         post = Post.objects.get(pk=pk)
-        if username.user == post.post_owner:
-            post.title = post_data['title']
-            post.message = post_data['message']
-            post.topic = Topic.objects.get(topic_name=post_data['topic'])
-            post.post_owner = username.user
-            post.save()
-            return Response(PostSerializer(post).data)
+        if post.is_live:
+            if username.user == post.post_owner:
+                post.title = post_data['title']
+                post.message = post_data['message']
+                post.topic = Topic.objects.get(topic_name=post_data['topic'])
+                post.post_owner = username.user
+                post.save()
+                return Response(PostSerializer(post).data)
+            return Response("Post is expired now")
         return Response(HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk, *args, **kwargs):
@@ -64,16 +66,18 @@ class PostViewSet(ModelViewSet):
         username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         post = Post.objects.get(pk=pk)
         # print(username.user, " == ", post.post_owner)
-        if username.user == post.post_owner:
-            self.perform_destroy(post)
-            return Response(data="Deleted successfully")
-        elif username.user != post.post_owner:
-            return Response(data="Operation not allowed")
-        return Response(data="Something went wrong")
+        if post.is_live:
+            if username.user == post.post_owner:
+                self.perform_destroy(post)
+                return Response(data="Deleted successfully")
+            elif username.user != post.post_owner:
+                return Response(data="Operation not allowed")
+            # return  Response("Post is expired.")
+        return Response(data="Post is expired")
 
     # Change this method instead of getting the
 
-    def retrieve(self, request,pk, *args, **kwargs):
+    def retrieve(self, request, pk, *args, **kwargs):
         print(request.data)
         username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
         print(username)
@@ -81,11 +85,13 @@ class PostViewSet(ModelViewSet):
         serializer = PostSerializer(post)
         # return Response(len(serializer.data['liked_by']))
         # posts = Post.objects.all()
-        if post.expiration_time < utc.localize(datetime.now()):
-            post.is_live = False
-            post.save()
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
+        if post.is_live:
+            if post.expiration_time < utc.localize(datetime.now()):
+                post.is_live = False
+                post.save()
+            serializer = PostSerializer(post)
+            return Response(serializer.data)
+        return ("Post is expired")
 
 
 class TopicViewSet(ViewSet):
@@ -183,9 +189,10 @@ class DislikeViewSet(ViewSet):
         dislike_data = request.data
         disliked_post_id = Post.objects.get(pk=dislike_data['disliked_post_id'])
         username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
-        if Dislike.objects.filter(disliked_post_id=disliked_post_id, disliked_by=username.user).exists():
-            return Response("You have already disliked the post")
         if disliked_post_id.is_live:
+            if Dislike.objects.filter(disliked_post_id=disliked_post_id, disliked_by=username.user).exists():
+                return Response("You have already disliked the post")
+
             if Like.objects.filter(liked_post_id=disliked_post_id, liked_by=username.user).exists():
                 return Response("You have liked the post you can't dislike it now")
             else:
@@ -196,6 +203,28 @@ class DislikeViewSet(ViewSet):
                 serializer = DislikeSerializer(dislike_object)
                 return Response(serializer.data)
         return Response("Post is expired now.")
+
+
+from .PostSerializer import TopPostsSerializer
+
+
+class TopPostsViewSet(ViewSet):
+    serializer_class = TopPostsSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Post.objects.all()
+
+    def list(self, request):
+        query = Post.objects.extra(select={"rating": "total_likes + total_dislikes"}, order_by=['-rating'])[:5]
+        serializer = TopPostsSerializer(query, many=True)
+        return Response(serializer.data)
+
+# @api_view(['GET'])
+# def Top(request):
+#     query = Post.objects.extra(select={"rating": "total_likes + total_dislikes"})
+#
+#     print(query.id)
+#     serializer = TopPostsSerializer(query)
+#     return Response(serializer.data)
 
 # class DislikeViewSet(ViewSet):
 #     serializer_class = LikeSerializer
