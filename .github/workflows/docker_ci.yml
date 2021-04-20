@@ -30,4 +30,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: hamzakhalid96/task-backend
+          tags: hamzakhalid96/backend-api
