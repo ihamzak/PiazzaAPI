@@ -10,8 +10,8 @@ from .serializers import CreateUserSerializer
 CLIENT_ID = 'YHlcoCvEET2yNDTzBnllV7TPPLdv9Kua5Iu3sHke'
 CLIENT_SECRET = 'HJ7aH99OAyP0kPDrwF5XhULk6xW3cjDDqCuCbVKsKkYejYsA4j0AGG4evZW9FZO3yqGW0s5ErAFpjFYF3RnjeraOHrFwQgEZZFlqVBT48uExxPZXx1Q5g7F6pQ6UjK2y'
 
-IP_token = 'http://127.0.0.1:8000/o/token/'
-IP_revoke_token = 'http://127.0.0.1:8000/o/revoke_token/'
+IP_token = 'http://0.0.0.0:80/o/token/'
+IP_revoke_token = 'http://0.0.0.0:80/o/revoke_token/'
 
 
 # {"username":"hamza","password":"hamza"}
@@ -24,7 +24,7 @@ def register(request):
     {"username": "username", "password": "1234abcd"}
     '''
     # Put the data from the request into the serializer
-    serializer = CreateUserSerializer(data=request.data)
+    serializer = CreateUserSerializer(data=str(request.data))
     # Validate the data
     if serializer.is_valid():
         # If it is valid, save the data (creates a user).
@@ -40,6 +40,7 @@ def register(request):
                               'client_secret': CLIENT_SECRET,
                           },
                           )
+        
         return Response(r.json())
     return Response(serializer.errors)
 
@@ -62,6 +63,7 @@ def token(request):
         },
 
     )
+    print("Response >  ",r.json())
     return Response(r.json())
 
 
