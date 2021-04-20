@@ -26,7 +26,7 @@ def register(request):
     {"username": "username", "password": "1234abcd"}
     '''
     # Put the data from the request into the serializer
-    serializer = CreateUserSerializer(data=request.data)
+    serializer = CreateUserSerializer(data=str(request.data))
     # Validate the data
     if serializer.is_valid():
         # If it is valid, save the data (creates a user).
@@ -42,6 +42,7 @@ def register(request):
                               'client_secret': CLIENT_SECRET,
                           },
                           )
+        
         return Response(r.json())
     return Response(serializer.errors)
 
@@ -65,9 +66,13 @@ def token(request):
         },
 
     )
+<<<<<<< HEAD
     print("\n \n \n \n")
     print("Response >>>>>>>>>>> ",r)
     print("\n \n \n \n")
+=======
+    print("Response >  ",r.json())
+>>>>>>> 61b295c71ba1cf30b04d770d68b8374742f72a97
     return Response(r.json())
 
 @csrf_exempt
