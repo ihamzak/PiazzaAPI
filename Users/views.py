@@ -10,12 +10,14 @@ from .serializers import CreateUserSerializer
 CLIENT_ID = 'YHlcoCvEET2yNDTzBnllV7TPPLdv9Kua5Iu3sHke'
 CLIENT_SECRET = 'HJ7aH99OAyP0kPDrwF5XhULk6xW3cjDDqCuCbVKsKkYejYsA4j0AGG4evZW9FZO3yqGW0s5ErAFpjFYF3RnjeraOHrFwQgEZZFlqVBT48uExxPZXx1Q5g7F6pQ6UjK2y'
 
-IP_token = 'http://127.0.0.1:8000/o/token/'
-IP_revoke_token = 'http://127.0.0.1:8000/o/revoke_token/'
+IP_token = 'http://0.0.0.0:80/o/token/'
+IP_revoke_token = 'http://0.0.0.0:80/o/revoke_token/'
 
 
 # {"username":"hamza","password":"hamza"}
 
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
@@ -43,7 +45,7 @@ def register(request):
         return Response(r.json())
     return Response(serializer.errors)
 
-
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def token(request):
@@ -51,6 +53,7 @@ def token(request):
     Gets tokens with username and password. Input should be in the format:
     {"username": "username", "password": "1234abcd"}
     '''
+    print("\n \n \n  Request Data >>>>>>  ",request.data,"\n \n\ \n")
     r = requests.post(
         IP_token,
         data={
@@ -62,9 +65,12 @@ def token(request):
         },
 
     )
+    print("\n \n \n \n")
+    print("Response >>>>>>>>>>> ",r)
+    print("\n \n \n \n")
     return Response(r.json())
 
-
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def refresh_token(request):
@@ -83,7 +89,7 @@ def refresh_token(request):
     )
     return Response(r.json())
 
-
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def revoke_token(request):
