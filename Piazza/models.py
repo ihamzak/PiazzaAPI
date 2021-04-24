@@ -21,12 +21,13 @@ class Post(models.Model):
     expiration_time = models.DateTimeField()
     post_owner = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE)
     is_live = models.BooleanField(default=True, editable=False)
-    total_likes = models.IntegerField(default=0, editable=True)
-    total_dislikes = models.IntegerField(default=0, editable=True)
-    total_time_remaining = models.DurationField()
+    total_likes = models.IntegerField(default=0, editable=False)
+    total_dislikes = models.IntegerField(default=0, editable=False)
+    total_time_remaining = models.DurationField(editable=False)
 
     def save(self, *args, **kwargs):
-        if self.expiration_time >= timezone.localtime():  # pytz.utc.localize(datetime.datetime.now()):
+        # check the expiration time, if greater than current time then live status is True else false
+        if self.expiration_time >= timezone.localtime():  # redundant pytz.utc.localize(datetime.datetime.now()):
             self.is_live = True
         else:
             self.is_live = False
@@ -55,6 +56,7 @@ class Like(models.Model):
         return "Post: " + str(self.liked_post_id) + ", Liked by:" + str(self.liked_by)
 
     class Meta:
+        # uniqueness constraint, every like should be unique
         unique_together = ('liked_post_id', 'liked_by')
 
 
@@ -66,4 +68,5 @@ class Dislike(models.Model):
         return "Post: " + str(self.disliked_post_id) + ", disiked by:" + str(self.disliked_by)
 
     class Meta:
+        # uniqueness constraint, every dislike should be unique
         unique_together = ('disliked_post_id', 'disliked_by')
