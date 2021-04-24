@@ -66,13 +66,7 @@ def token(request):
         },
 
     )
-<<<<<<< HEAD
-    print("\n \n \n \n")
-    print("Response >>>>>>>>>>> ",r)
-    print("\n \n \n \n")
-=======
-    print("Response >  ",r.json())
->>>>>>> 61b295c71ba1cf30b04d770d68b8374742f72a97
+
     return Response(r.json())
 
 @csrf_exempt

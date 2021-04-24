@@ -27,11 +27,8 @@ SECRET_KEY = '3f%c1@5w522&bclyfj*+5#%d&5reaxod!^%@5m)c_+g+_$40i3'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-<<<<<<< HEAD
-ALLOWED_HOSTS = ['35.188.146.81','0.0.0.0']
-=======
-ALLOWED_HOSTS = ['0.0.0.0','public_ip']
->>>>>>> 61b295c71ba1cf30b04d770d68b8374742f72a97
+
+ALLOWED_HOSTS = ['35.188.146.81','0.0.0.0','*']
 
 # Application definition
 
@@ -46,7 +43,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'Users',
     'Piazza',
-    #'django_celery_beat',
 
 ]
 

@@ -25,6 +25,7 @@ class PostViewSet(ModelViewSet):
     queryset = Post.objects.all()
 
     def list(self, request, *args, **kwargs):
+        # updatePostStatus() method updates the status of post on each list call.
         updatePostStatus()
         print(request.data)
         if 'postid' in request.data:
@@ -78,9 +79,9 @@ class PostViewSet(ModelViewSet):
 
     def retrieve(self, request, pk, *args, **kwargs):
         updatePostStatus()
-        #print(request.data)
+        # print(request.data)
         username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
-        #print(username)
+        # print(username)
         post = Post.objects.get(pk=pk)
         serializer = PostSerializer(post)
         # return Response(len(serializer.data['liked_by']))
@@ -116,9 +117,9 @@ class LivePostsViewSet(ViewSet):
         updatePostStatus()
         # check wherther the topic is present in request body if pressent then filter the posts by topic 
         if "topic" in request.data:
-            live_posts_queryset = Post.objects.filter(is_live=True,topic=request.data['topic'])
+            live_posts_queryset = Post.objects.filter(is_live=True, topic=request.data['topic'])
             serializer = PostSerializer(live_posts_queryset, many=True)
-            return Response(serializer.data)     
+            return Response(serializer.data)
         live_posts_queryset = Post.objects.filter(is_live=True)
         serializer = PostSerializer(live_posts_queryset, many=True)
         return Response(serializer.data)
@@ -131,11 +132,11 @@ class ExpiredPostsViewSet(ViewSet):
 
     def list(self, request):
         updatePostStatus()
-                # check wherther the topic is present in request body if pressent then filter the posts by topic 
+        # check wherther the topic is present in request body if pressent then filter the posts by topic
         if "topic" in request.data:
-            expired_posts_queryset = Post.objects.filter(is_live=False,topic=request.data['topic'])
+            expired_posts_queryset = Post.objects.filter(is_live=False, topic=request.data['topic'])
             serializer = PostSerializer(expired_posts_queryset, many=True)
-            return Response(serializer.data) 
+            return Response(serializer.data)
         expired_posts_queryset = Post.objects.filter(is_live=False)
         serializer = PostSerializer(expired_posts_queryset, many=True)
         return Response(serializer.data)
@@ -171,14 +172,16 @@ class LikeViewSet(ViewSet):
     queryset = Like.objects.all()
 
     def create(self, request):
-        '''
+        """
             Like the post if the post is not already liked or disliked by the user.
-        '''
-        like_data = request.data # get the data from request body 
+        """
+        like_data = request.data  # get the data from request body
         updatePostStatus()
-        liked_post_id = Post.objects.get(pk=like_data['liked_post_id'])  # get the post by its primary key 
-        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip()) # gets the user from access_token 
-        if username.user  == liked_post_id.post_owner:
+        # get the post by its primary key
+        liked_post_id = Post.objects.get(pk=like_data['liked_post_id'])
+        # gets the user from access_token
+        username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
+        if username.user == liked_post_id.post_owner:
             return Response("you are not allowed to like you own  post")
         if liked_post_id.is_live:
             if Like.objects.filter(liked_post_id=liked_post_id, liked_by=username.user):
@@ -187,7 +190,7 @@ class LikeViewSet(ViewSet):
             if Dislike.objects.filter(disliked_post_id=liked_post_id, disliked_by=username.user).exists():
                 return Response("You have disliked the post you can't like it anymore")
             else:
-                
+
                 like_object = Like.objects.create(liked_post_id=liked_post_id, liked_by=username.user)
                 like_object.save()
                 liked_post_id.total_likes += 1
@@ -203,17 +206,19 @@ class DislikeViewSet(ViewSet):
     queryset = Dislike.objects.all()
 
     def create(self, request):
-        '''
-            Dislike the post if the post is not already liked or disliked by the user.
-        '''
-        #print(request.META['HTTP_AUTHORIZATION'])
+        """
+        Dislike the post if the post is not already liked or disliked by the user. The post owner is not allowed to
+        Dislike his own post.
+        """
+        if "HTTP_AUTHORIZATION" not in request.META:
+            return Response("No access token provided. Please acccess the API via Bearer Token")
         access_token = request.META['HTTP_AUTHORIZATION'].replace('Bearer', "").strip()
-        #print(access_token)
+
         dislike_data = request.data
         updatePostStatus()
         disliked_post_id = Post.objects.get(pk=dislike_data['disliked_post_id'])
         username = AccessToken.objects.get(token=request.META['HTTP_AUTHORIZATION'].replace("Bearer", "").strip())
-        if username.user  == disliked_post_id.post_owner:
+        if username.user == disliked_post_id.post_owner:
             return Response("you are not allowed to like you own  post")
         if disliked_post_id.is_live:
             if Dislike.objects.filter(disliked_post_id=disliked_post_id, disliked_by=username.user).exists():
@@ -231,11 +236,8 @@ class DislikeViewSet(ViewSet):
         return Response("Post is expired now.")
 
 
-
-
-
 class TopPostsViewSet(ViewSet):
-    serializer_class = TopPostsSerializer  
+    serializer_class = TopPostsSerializer
     permission_classes = [IsAuthenticated]
     queryset = Post.objects.all()
 
@@ -244,6 +246,7 @@ class TopPostsViewSet(ViewSet):
         '''
             Lists top 5 posts from the queryset and shows rating , title, post_owner, topic and is_live attributes of the post. 
         '''
-        query = Post.objects.extra(select={"rating": "total_likes + total_dislikes"}, order_by=['-rating','created_at']).filter(is_live=True)[:5]
+        query = Post.objects.extra(select={"rating": "total_likes + total_dislikes"},
+                                   order_by=['-rating', 'created_at']).filter(is_live=True)[:5]
         serializer = TopPostsSerializer(query, many=True)
         return Response(serializer.data)
