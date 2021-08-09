@@ -43,3 +43,44 @@ OAuth service will work to access protected resources.
 
 ![image](https://user-images.githubusercontent.com/19213074/128780863-f707e567-00a7-4c0d-9cab-fe901ff180ea.png)
 
+
+### Services
+
+We have developed SaaS in Python using Django and Django Rest Framework. There are
+mainly 2 services in our SaaS application. The first service is Authentication service which
+is used to register the user if the user is not already registered in the system. Registered
+users can get access token information using their credentials. The second service is Piazza
+service which provides the main functionality to authenticated users such as creating a post
+in a specific topic with expiration time and allowing other users to like, dislike and comment
+on other user’s posts.
+
+### Piazza Service Data Model
+
+The database design of our Piazza service is shown below.
+
+![image](https://user-images.githubusercontent.com/19213074/128780994-a60f22ff-c7e8-475b-9614-a745f19708c7.png)
+
+From the above ERD diagram we can see that each Post can have one topic but a topic
+can have zero or many posts. While each comment is referenced to one post but a Post can
+have zero or many comments and each post can have many likes or dislikes but a like and
+dislike entity can have reference to one and only one like or dislike.
+
+### Services Endpoints
+
+##### User Service / Authentication Service
+
+User service allows the user to register if they are not already registered in the system. If the
+user is already registered then they can use their credentials to get their access token.
+
+##### Piazza Service
+Piazza service allows authenticated/registered users to perform many operations. See the
+attached link below to read API documentation. As there are many end points in my API so
+I have created documentation for my API.
+
+https://documenter.getpostman.com/view/12170320/TzJpifH8
+
+
+
+
+
+
