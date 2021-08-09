@@ -41,7 +41,8 @@ new token will be issued to newly registered users. If the user is already regis
 has to use his credentials to retin access token.See the diagram below to understand how
 OAuth service will work to access protected resources.
 
-![image](https://user-images.githubusercontent.com/19213074/128780863-f707e567-00a7-4c0d-9cab-fe901ff180ea.png)
+![Development of a Cloud Software as a Service (1)](https://user-images.githubusercontent.com/19213074/128781388-fa29d1a3-1043-4d60-abe6-52001e735023.jpg)
+
 
 
 ### Services
