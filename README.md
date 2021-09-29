@@ -38,7 +38,7 @@ access token to access the protected resources hosted by the resource server.[1]
 
 To access the resources in Piazza service , first user’s have to register themselves and a
 new token will be issued to newly registered users. If the user is already registered, the user
-has to use his credentials to retin access token.See the diagram below to understand how
+has to use his credentials to retain access token.See the diagram below to understand how
 OAuth service will work to access protected resources.
 
 ![Development of a Cloud Software as a Service (1)](https://user-images.githubusercontent.com/19213074/128781388-fa29d1a3-1043-4d60-abe6-52001e735023.jpg)
